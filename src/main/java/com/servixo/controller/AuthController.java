@@ -6,7 +6,6 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -26,14 +25,8 @@ public class AuthController {
 
     @Autowired
     private AuthService authService;
-    @Autowired
-    private org.springframework.core.env.Environment env;
 
-    @GetMapping("/test-mail-config")
-    public String testMailConfig() {
-        return env.getProperty("spring.mail.username");
-    }
-    // ================= 🔥 REGISTER =================
+    // ================= REGISTER =================
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
 
@@ -44,50 +37,43 @@ public class AuthController {
                 request.getRoleName()
         );
 
-        // 🔥 After register → send OTP
-        authService.sendOtp(request.getEmail());
-
         Map<String, Object> response = new HashMap<>();
-        response.put("message", "User registered. OTP sent to email.");
+        response.put("message", "User registered successfully");
         response.put("email", user.getEmail());
 
         return ResponseEntity.ok(response);
     }
 
-    // ================= 🔥 LOGIN =================
+    // ================= LOGIN (STEP 1) =================
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginDto dto) {
 
-        User user = authService.login(dto.getEmail(), dto.getPassword());
+        Map<String, Object> response = authService.loginAndSendOtp(
+                dto.getEmail(),
+                dto.getPassword()
+        );
 
-        // 🔥 If NOT VERIFIED → send OTP again
-        if (!user.isVerified()) {
+        return ResponseEntity.ok(response);
+    }
 
-            authService.sendOtp(user.getEmail());
+    // ================= VERIFY LOGIN OTP (STEP 2) =================
+    @PostMapping("/verify-login-otp")
+    public ResponseEntity<?> verifyLoginOtp(@RequestBody VerifyOtpRequest request) {
 
-            Map<String, Object> response = new HashMap<>();
-            response.put("status", "NOT_VERIFIED");
-            response.put("message", "OTP sent to your email");
-            response.put("email", user.getEmail());
+        User user = authService.verifyLoginOtp(
+                request.getEmail(),
+                request.getOtp()
+        );
 
-            return ResponseEntity.ok(response);
-        }
-
-        // ✅ SUCCESS LOGIN
         return ResponseEntity.ok(user);
     }
 
-    // ================= 🔥 SEND OTP =================
- 
+    // ================= OPTIONAL (RESEND OTP) =================
     @PostMapping("/send-otp")
-    public ResponseEntity<?> sendOtp(@RequestBody EmailRequest request) {
-        authService.sendOtp(request.getEmail());
-        return ResponseEntity.ok("OTP sent successfully");
-    }
+    public ResponseEntity<?> resendOtp(@RequestBody EmailRequest request) {
 
-    @PostMapping("/verify-otp")
-    public ResponseEntity<?> verifyOtp(@RequestBody VerifyOtpRequest request) {
-        authService.verifyOtp(request.getEmail(), request.getOtp());
-        return ResponseEntity.ok("Email verified successfully");
+        authService.sendOtp(request.getEmail());
+
+        return ResponseEntity.ok("OTP sent successfully");
     }
 }

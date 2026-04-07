@@ -24,8 +24,8 @@ public class BookingService {
     @Autowired
     private ServiceRepository serviceRepository;
 
-    // CREATE BOOKING
-    public Booking createBooking(Long userId, Long serviceId, Booking bookingData) {
+    // ================= CREATE BOOKING =================
+    public Booking createBooking(Long userId, Long serviceId) {
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
@@ -34,32 +34,29 @@ public class BookingService {
                 .orElseThrow(() -> new RuntimeException("Service not found"));
 
         if (!"APPROVED".equalsIgnoreCase(service.getStatus())) {
-            throw new RuntimeException("Service not approved");
+            throw new RuntimeException("Service not approved by admin");
         }
 
         Booking booking = new Booking();
 
         booking.setUser(user);
         booking.setService(service);
-        booking.setProfessional(service.getProfessional());
 
-        booking.setServiceDate(bookingData.getServiceDate());
-        booking.setArrivalTime(bookingData.getArrivalTime());
-        booking.setAddress(bookingData.getAddress());
-        booking.setInstructions(bookingData.getInstructions());
+        // 🔥 MOST IMPORTANT LINE
+        booking.setProfessional(service.getProfessional());
 
         booking.setStatus("PENDING");
 
         return bookingRepository.save(booking);
     }
 
-    // UPDATE STATUS
+    // ================= UPDATE STATUS =================
     public Booking updateStatus(Long bookingId, String status) {
 
         status = status.trim().toUpperCase();
 
         if (!status.equals("PENDING") &&
-            !status.equals("APPROVED") &&
+            !status.equals("ACCEPTED") &&
             !status.equals("REJECTED") &&
             !status.equals("COMPLETED")) {
 
@@ -74,14 +71,17 @@ public class BookingService {
         return bookingRepository.save(booking);
     }
 
+    // ================= USER BOOKINGS =================
     public List<Booking> getUserBookings(Long userId) {
         return bookingRepository.findByUser_Id(userId);
     }
 
+    // ================= PROFESSIONAL BOOKINGS =================
     public List<Booking> getProfessionalBookings(Long professionalId) {
         return bookingRepository.findByProfessional_Id(professionalId);
     }
 
+    // ================= ALL BOOKINGS =================
     public List<Booking> getAllBookings() {
         return bookingRepository.findAll();
     }

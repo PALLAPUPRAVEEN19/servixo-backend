@@ -11,43 +11,45 @@ import com.servixo.entity.User;
 
 public interface BookingRepository extends JpaRepository<Booking, Long> {
 
-    // USER
+    // ================= USER =================
     List<Booking> findByUser_Id(Long userId);
     long countByUser_Id(Long userId);
     long countByUser_IdAndStatus(Long userId, String status);
 
-    // PROFESSIONAL
+    // ================= PROFESSIONAL =================
     List<Booking> findByProfessional_Id(Long professionalId);
     long countByProfessional_Id(Long professionalId);
     long countByProfessional_IdAndStatus(Long professionalId, String status);
 
-    // STATUS
+    // ================= STATUS =================
     List<Booking> findByStatus(String status);
     long countByStatus(String status);
 
-    // ACTIVE BOOKINGS (USER)
-    @Query("SELECT COUNT(b) FROM Booking b WHERE b.user.id = :userId AND (b.status = 'PENDING' OR b.status = 'APPROVED')")
+    // ================= ACTIVE BOOKINGS (USER) =================
+    @Query("SELECT COUNT(b) FROM Booking b WHERE b.user.id = :userId AND (b.status = 'PENDING' OR b.status = 'ACCEPTED')")
     long countActiveBookingsForUser(Long userId);
 
-    // ACTIVE BOOKINGS (PROFESSIONAL)
-    @Query("SELECT COUNT(b) FROM Booking b WHERE b.professional.id = :professionalId AND (b.status = 'PENDING' OR b.status = 'APPROVED')")
+    // ================= ACTIVE BOOKINGS (PROFESSIONAL) =================
+    @Query("SELECT COUNT(b) FROM Booking b WHERE b.professional.id = :professionalId AND (b.status = 'PENDING' OR b.status = 'ACCEPTED')")
     long countActiveBookingsForProfessional(Long professionalId);
 
-    // TOTAL BOOKINGS
+    // ================= GLOBAL =================
     @Query("SELECT COUNT(b) FROM Booking b")
     long getTotalBookings();
 
-    // COMPLETED BOOKINGS
     @Query("SELECT COUNT(b) FROM Booking b WHERE b.status = 'COMPLETED'")
     long getCompletedBookings();
 
-    // ACTIVE BOOKINGS GLOBAL
-    @Query("SELECT COUNT(b) FROM Booking b WHERE b.status = 'PENDING' OR b.status = 'APPROVED'")
+    @Query("SELECT COUNT(b) FROM Booking b WHERE b.status = 'PENDING' OR b.status = 'ACCEPTED'")
     long getActiveBookings();
 
-    // EARNINGS
+    // ================= EARNINGS =================
     @Query("SELECT COALESCE(SUM(b.service.price), 0) FROM Booking b WHERE b.professional.id = :professionalId AND b.status = 'COMPLETED'")
     Double getTotalEarnings(Long professionalId);
 
+    // ================= PROFESSIONAL BOOKINGS (MAIN) =================
+    
+
+    // ================= DUPLICATE CHECK =================
     boolean existsByUserAndService(User user, ServiceEntity service);
 }

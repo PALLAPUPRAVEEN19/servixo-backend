@@ -1,17 +1,22 @@
 package com.servixo.controller;
 
-import com.servixo.entity.Professional;
-import com.servixo.entity.ServiceEntity;
-import com.servixo.entity.Booking;
-import com.servixo.service.ProfessionalService;
-import com.servixo.service.ServiceService;
-import com.servixo.service.BookingService;
-import com.servixo.service.PaymentService;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
+import com.servixo.entity.Booking;
+import com.servixo.entity.Professional;
+import com.servixo.entity.ServiceEntity;
+import com.servixo.service.BookingService;
+import com.servixo.service.ProfessionalService;
+import com.servixo.service.ServiceService;
 
 @RestController
 @RequestMapping("/api/professional")
@@ -27,9 +32,6 @@ public class ProfessionalController {
     @Autowired
     private BookingService bookingService;
 
-    @Autowired
-    private PaymentService paymentService;
-
     // ================= PROFILE =================
     @GetMapping("/{id}")
     public Professional getProfessional(@PathVariable Long id) {
@@ -42,7 +44,7 @@ public class ProfessionalController {
             @PathVariable Long professionalId,
             @RequestBody ServiceEntity service) {
 
-        return serviceService.createService(professionalId, service); // ✅ FIXED
+        return serviceService.createService(professionalId, service);
     }
 
     // ================= VIEW OWN SERVICES =================
@@ -51,15 +53,13 @@ public class ProfessionalController {
         return professionalService.getServicesByProfessional(professionalId);
     }
 
-    // ================= VIEW BOOKINGS =================
+    // ================= VIEW BOOKINGS (MAIN FIX) =================
     @GetMapping("/bookings/{professionalId}")
     public List<Booking> getBookings(@PathVariable Long professionalId) {
         return bookingService.getProfessionalBookings(professionalId);
     }
 
     // ================= VIEW EARNINGS =================
-    @GetMapping("/earnings")
-    public double getEarnings() {
-        return paymentService.getTotalRevenue(); // later filter by professional
-    }
+  
+  
 }

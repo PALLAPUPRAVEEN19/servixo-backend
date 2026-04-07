@@ -76,4 +76,12 @@ public class AdminController {
     public ResponseEntity<?> getStats() {
         return ResponseEntity.ok(adminService.getStats());
     }
+    
+    @PutMapping("/users/{id}")
+    public User updateUser(
+            @PathVariable Long id,
+            @RequestBody User updatedUser) {
+
+        return userService.updateUser(id, updatedUser);
+    }
 }

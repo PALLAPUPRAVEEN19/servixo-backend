@@ -9,7 +9,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.Optional;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Random;
 
 @Service
@@ -40,13 +41,12 @@ public class AuthService {
         user.setEmail(email);
         user.setPassword(password);
         user.setRole(role);
-        user.setVerified(false);
 
         return userRepository.save(user);
     }
 
-    // ================= LOGIN =================
-    public User login(String email, String password) {
+    // ================= LOGIN + SEND OTP =================
+    public Map<String, Object> loginAndSendOtp(String email, String password) {
 
         User user = userRepository.findByEmailWithRole(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
@@ -55,10 +55,54 @@ public class AuthService {
             throw new RuntimeException("Invalid password");
         }
 
+        // 🔥 Generate OTP
+        String otp = String.valueOf(100000 + new Random().nextInt(900000));
+
+        user.setOtp(otp);
+        user.setOtpExpiry(LocalDateTime.now().plusMinutes(5));
+        userRepository.save(user);
+
+        // 🔥 Send Email
+        emailService.sendEmail(
+                email,
+                "Servixo Login OTP",
+                "Your OTP is: " + otp + "\nValid for 5 minutes."
+        );
+
+        System.out.println("🔥 LOGIN OTP: " + otp);
+
+        // 🔥 Response
+        Map<String, Object> response = new HashMap<>();
+        response.put("status", "OTP_REQUIRED");
+        response.put("email", email);
+
+        return response;
+    }
+
+    // ================= VERIFY LOGIN OTP =================
+    public User verifyLoginOtp(String email, String otp) {
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (user.getOtp() == null || !user.getOtp().equals(otp)) {
+            throw new RuntimeException("Invalid OTP");
+        }
+
+        if (user.getOtpExpiry().isBefore(LocalDateTime.now())) {
+            throw new RuntimeException("OTP expired");
+        }
+
+        // ✅ Clear OTP
+        user.setOtp(null);
+        user.setOtpExpiry(null);
+
+        userRepository.save(user);
+
         return user;
     }
 
-    // ================= SEND OTP =================
+    // ================= RESEND OTP =================
     public void sendOtp(String email) {
 
         User user = userRepository.findByEmail(email)
@@ -73,31 +117,8 @@ public class AuthService {
 
         emailService.sendEmail(
                 email,
-                "Servixo OTP Verification",
-                "Your OTP is: " + otp + "\nValid for 5 minutes."
+                "Servixo OTP",
+                "Your OTP is: " + otp
         );
-
-        System.out.println("🔥 OTP SENT: " + otp);
-    }
-
-    // ================= VERIFY OTP =================
-    public void verifyOtp(String email, String otp) {
-
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
-        if (user.getOtp() == null || !user.getOtp().equals(otp)) {
-            throw new RuntimeException("Invalid OTP");
-        }
-
-        if (user.getOtpExpiry().isBefore(LocalDateTime.now())) {
-            throw new RuntimeException("OTP expired");
-        }
-
-        user.setVerified(true);
-        user.setOtp(null);
-        user.setOtpExpiry(null);
-
-        userRepository.save(user);
     }
 }
