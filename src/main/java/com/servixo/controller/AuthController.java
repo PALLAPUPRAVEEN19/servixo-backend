@@ -5,17 +5,14 @@ import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.servixo.dto.EmailRequest;
 import com.servixo.dto.LoginDto;
 import com.servixo.dto.VerifyOtpRequest;
 import com.servixo.dto.auth.RegisterRequest;
 import com.servixo.entity.User;
+import com.servixo.security.JwtUtil;
 import com.servixo.service.AuthService;
 
 @RestController
@@ -25,6 +22,9 @@ public class AuthController {
 
     @Autowired
     private AuthService authService;
+
+    @Autowired
+    private JwtUtil jwtUtil; // 🔥 ADD THIS
 
     // ================= REGISTER =================
     @PostMapping("/register")
@@ -44,7 +44,7 @@ public class AuthController {
         return ResponseEntity.ok(response);
     }
 
-    // ================= LOGIN (STEP 1) =================
+    // ================= LOGIN (STEP 1 - SEND OTP) =================
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginDto dto) {
 
@@ -56,7 +56,7 @@ public class AuthController {
         return ResponseEntity.ok(response);
     }
 
-    // ================= VERIFY LOGIN OTP (STEP 2) =================
+    // ================= VERIFY LOGIN OTP (STEP 2 - GENERATE JWT) =================
     @PostMapping("/verify-login-otp")
     public ResponseEntity<?> verifyLoginOtp(@RequestBody VerifyOtpRequest request) {
 
@@ -65,10 +65,19 @@ public class AuthController {
                 request.getOtp()
         );
 
-        return ResponseEntity.ok(user);
+        // 🔥 GENERATE JWT HERE
+        String token = jwtUtil.generateToken(user.getEmail());
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("token", token);
+        response.put("userId", user.getId());
+        response.put("role", user.getRole().getName());
+        response.put("name", user.getName());
+
+        return ResponseEntity.ok(response);
     }
 
-    // ================= OPTIONAL (RESEND OTP) =================
+    // ================= RESEND OTP =================
     @PostMapping("/send-otp")
     public ResponseEntity<?> resendOtp(@RequestBody EmailRequest request) {
 

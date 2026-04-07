@@ -2,6 +2,7 @@ package com.servixo.security;
 
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
+
 import org.springframework.stereotype.Component;
 
 import java.security.Key;
@@ -10,7 +11,7 @@ import java.util.Date;
 @Component
 public class JwtUtil {
 
-    private final String SECRET = "mysecretkeymysecretkeymysecretkey";
+    private final String SECRET = "mysecretkeymysecretkeymysecretkey"; // 32+ chars
 
     private Key getKey() {
         return Keys.hmacShaKeyFor(SECRET.getBytes());
