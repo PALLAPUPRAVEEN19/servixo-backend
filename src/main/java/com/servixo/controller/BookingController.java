@@ -15,6 +15,7 @@ public class BookingController {
 
     @Autowired
     private BookingService bookingService;
+
     @PostMapping
     public Booking createBooking(
             @RequestParam Long userId,
@@ -23,20 +24,22 @@ public class BookingController {
 
         return bookingService.createBooking(userId, serviceId, booking);
     }
+
     @GetMapping("/user/{id}")
     public List<Booking> getUserBookings(@PathVariable Long id) {
         return bookingService.getUserBookings(id);
+    }
+
+    @GetMapping("/professional/{id}")
+    public List<Booking> getProfessionalBookings(@PathVariable Long id) {
+        return bookingService.getProfessionalBookings(id);
     }
 
     @PutMapping("/{id}/status")
     public Booking updateBookingStatus(
             @PathVariable Long id,
             @RequestParam String status) {
+
         return bookingService.updateStatus(id, status);
-    }
-    
-    @GetMapping("/professional/{id}")
-    public List<Booking> getProfessionalBookings(@PathVariable Long id) {
-        return bookingService.getProfessionalBookings(id);
     }
 }

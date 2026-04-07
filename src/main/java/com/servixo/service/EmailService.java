@@ -13,11 +13,22 @@ public class EmailService {
 
     public void sendEmail(String to, String subject, String text) {
 
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setTo(to);
-        message.setSubject(subject);
-        message.setText(text);
+        try {
+            SimpleMailMessage message = new SimpleMailMessage();
 
-        mailSender.send(message);
+            message.setFrom("2400031582cse1@gmail.com"); // 🔥 IMPORTANT
+            message.setTo(to);
+            message.setSubject(subject);
+            message.setText(text);
+
+            mailSender.send(message);
+
+            System.out.println("✅ Email sent successfully!");
+
+        } catch (Exception e) {
+            System.out.println("❌ Email failed!");
+            e.printStackTrace();
+            throw new RuntimeException("Email sending failed");
+        }
     }
 }

@@ -24,89 +24,64 @@ public class BookingService {
     @Autowired
     private ServiceRepository serviceRepository;
 
-    // 🔥 CREATE BOOKING (FINAL VERSION)
+    // CREATE BOOKING
     public Booking createBooking(Long userId, Long serviceId, Booking bookingData) {
 
-        System.out.println("🔥 Booking started");
-
-        // ✅ 1. Get User
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        // ✅ 2. Get Service
         ServiceEntity service = serviceRepository.findById(serviceId)
                 .orElseThrow(() -> new RuntimeException("Service not found"));
 
-        // ✅ 3. Check service approval
         if (!"APPROVED".equalsIgnoreCase(service.getStatus())) {
-            throw new RuntimeException("Service is not approved yet");
+            throw new RuntimeException("Service not approved");
         }
 
-        // ✅ 4. Check professional exists
-        if (service.getProfessional() == null) {
-            throw new RuntimeException("Service has no professional assigned");
-        }
-
-        // ✅ 5. Create Booking
         Booking booking = new Booking();
 
         booking.setUser(user);
         booking.setService(service);
-
-        // 🔥 IMPORTANT FIX
         booking.setProfessional(service.getProfessional());
 
-        // ✅ Booking details
         booking.setServiceDate(bookingData.getServiceDate());
         booking.setArrivalTime(bookingData.getArrivalTime());
+        booking.setAddress(bookingData.getAddress());
+        booking.setInstructions(bookingData.getInstructions());
 
-        booking.setAddress(
-                bookingData.getAddress() != null ? bookingData.getAddress() : "Not provided"
-        );
-
-        booking.setInstructions(
-                bookingData.getInstructions() != null ? bookingData.getInstructions() : ""
-        );
-
-        // ✅ Default status
         booking.setStatus("PENDING");
-
-        System.out.println("🚀 Saving booking...");
 
         return bookingRepository.save(booking);
     }
 
-    // 🔥 UPDATE STATUS (ACCEPT / REJECT / COMPLETE)
+    // UPDATE STATUS
     public Booking updateStatus(Long bookingId, String status) {
+
+        status = status.trim().toUpperCase();
+
+        if (!status.equals("PENDING") &&
+            !status.equals("APPROVED") &&
+            !status.equals("REJECTED") &&
+            !status.equals("COMPLETED")) {
+
+            throw new RuntimeException("Invalid status value: " + status);
+        }
 
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new RuntimeException("Booking not found"));
 
-        // ✅ Validate status
-        if (!status.equalsIgnoreCase("PENDING") &&
-            !status.equalsIgnoreCase("ACCEPTED") &&
-            !status.equalsIgnoreCase("REJECTED") &&
-            !status.equalsIgnoreCase("COMPLETED")) {
-
-            throw new RuntimeException("Invalid status value");
-        }
-
-        booking.setStatus(status.toUpperCase());
+        booking.setStatus(status);
 
         return bookingRepository.save(booking);
     }
 
-    // 🔹 GET USER BOOKINGS
     public List<Booking> getUserBookings(Long userId) {
         return bookingRepository.findByUser_Id(userId);
     }
 
-    // 🔹 GET PROFESSIONAL BOOKINGS
     public List<Booking> getProfessionalBookings(Long professionalId) {
         return bookingRepository.findByProfessional_Id(professionalId);
     }
 
-    // 🔥 OPTIONAL: GET ALL BOOKINGS (ADMIN)
     public List<Booking> getAllBookings() {
         return bookingRepository.findAll();
     }

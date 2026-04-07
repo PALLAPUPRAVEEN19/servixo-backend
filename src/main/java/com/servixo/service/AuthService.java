@@ -8,7 +8,9 @@ import com.servixo.repository.RoleRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
+import java.util.Random;
 
 @Service
 public class AuthService {
@@ -19,33 +21,33 @@ public class AuthService {
     @Autowired
     private RoleRepository roleRepository;
 
+    @Autowired
+    private EmailService emailService;
+
     // ================= REGISTER =================
     public User register(String name, String email, String password, String roleName) {
 
-        // ✅ Check if user already exists
-        Optional<User> existing = userRepository.findByEmail(email);
-        if (existing.isPresent()) {
+        if (userRepository.findByEmail(email).isPresent()) {
             throw new RuntimeException("User already exists");
         }
 
-        // ✅ Assign selected role or default to USER
-        String targetRole = (roleName == null || roleName.trim().isEmpty()) ? "USER" : roleName;
-        Role role = roleRepository.findByName(targetRole)
-                .orElseThrow(() -> new RuntimeException("Role not found"));
+        Role role = roleRepository.findByName(
+                (roleName == null || roleName.isEmpty()) ? "USER" : roleName
+        ).orElseThrow(() -> new RuntimeException("Role not found"));
 
-        // ✅ Create user
         User user = new User();
         user.setName(name);
         user.setEmail(email);
-        user.setPassword(password); // later encrypt
+        user.setPassword(password);
         user.setRole(role);
+        user.setVerified(false);
 
         return userRepository.save(user);
     }
+
     // ================= LOGIN =================
     public User login(String email, String password) {
 
-        // 🔥 FIXED: use JOIN FETCH method
         User user = userRepository.findByEmailWithRole(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
@@ -54,5 +56,48 @@ public class AuthService {
         }
 
         return user;
+    }
+
+    // ================= SEND OTP =================
+    public void sendOtp(String email) {
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        String otp = String.valueOf(100000 + new Random().nextInt(900000));
+
+        user.setOtp(otp);
+        user.setOtpExpiry(LocalDateTime.now().plusMinutes(5));
+
+        userRepository.save(user);
+
+        emailService.sendEmail(
+                email,
+                "Servixo OTP Verification",
+                "Your OTP is: " + otp + "\nValid for 5 minutes."
+        );
+
+        System.out.println("🔥 OTP SENT: " + otp);
+    }
+
+    // ================= VERIFY OTP =================
+    public void verifyOtp(String email, String otp) {
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (user.getOtp() == null || !user.getOtp().equals(otp)) {
+            throw new RuntimeException("Invalid OTP");
+        }
+
+        if (user.getOtpExpiry().isBefore(LocalDateTime.now())) {
+            throw new RuntimeException("OTP expired");
+        }
+
+        user.setVerified(true);
+        user.setOtp(null);
+        user.setOtpExpiry(null);
+
+        userRepository.save(user);
     }
 }
