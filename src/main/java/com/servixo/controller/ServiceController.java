@@ -52,6 +52,12 @@ public class ServiceController {
         return serviceService.approveService(id);
     }
 
+    // 🔹 ADMIN - REJECT SERVICE
+    @PutMapping("/reject/{id}")
+    public ServiceEntity rejectService(@PathVariable Long id) {
+        return serviceService.rejectService(id);
+    }
+
     // 🔹 PROFESSIONAL - GET OWN SERVICES
     @GetMapping("/professional/{id}")
     public List<ServiceEntity> getMyServices(@PathVariable Long id) {

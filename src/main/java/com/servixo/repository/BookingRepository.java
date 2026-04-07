@@ -1,22 +1,33 @@
 package com.servixo.repository;
 
-import org.springframework.data.jpa.repository.JpaRepository;
-import com.servixo.entity.Booking;
-import com.servixo.entity.User;
-import com.servixo.entity.Professional;
-import com.servixo.entity.ServiceEntity;
-
 import java.util.List;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import com.servixo.entity.Booking;
+import com.servixo.entity.ServiceEntity;
+import com.servixo.entity.User;
 
 public interface BookingRepository extends JpaRepository<Booking, Long> {
 
-    List<Booking> findByUser(User user);
+    // 🔹 USER BOOKINGS
+    List<Booking> findByUser_Id(Long userId);
 
-    List<Booking> findByProfessional(Professional professional);
+    // 🔹 PROFESSIONAL BOOKINGS
+    List<Booking> findByProfessional_Id(Long professionalId);
 
-    List<Booking> findByProfessionalId(Long professionalId); // 🔥 NEW
-
+    // 🔹 FILTER BY STATUS
     List<Booking> findByStatus(String status);
 
-    boolean existsByUserAndService(User user, ServiceEntity service); // 🔥 NEW
+    // 🔥 USER + STATUS (for history page)
+    List<Booking> findByUser_IdAndStatus(Long userId, String status);
+
+    // 🔥 PROFESSIONAL + STATUS (dashboard filtering)
+    List<Booking> findByProfessional_IdAndStatus(Long professionalId, String status);
+
+    // 🔥 CHECK DUPLICATE BOOKING (optional future use)
+    boolean existsByUserAndService(User user, ServiceEntity service);
+
+    // 🔥 GET COMPLETED BOOKINGS (for earnings)
+    
 }

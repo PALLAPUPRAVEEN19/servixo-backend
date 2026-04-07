@@ -27,4 +27,16 @@ public class BookingController {
     public List<Booking> getUserBookings(@PathVariable Long id) {
         return bookingService.getUserBookings(id);
     }
+
+    @PutMapping("/{id}/status")
+    public Booking updateBookingStatus(
+            @PathVariable Long id,
+            @RequestParam String status) {
+        return bookingService.updateStatus(id, status);
+    }
+    
+    @GetMapping("/professional/{id}")
+    public List<Booking> getProfessionalBookings(@PathVariable Long id) {
+        return bookingService.getProfessionalBookings(id);
+    }
 }

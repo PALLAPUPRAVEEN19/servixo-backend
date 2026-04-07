@@ -52,6 +52,15 @@ public class ServiceService {
         return serviceRepository.save(service);
     }
 
+    // 🔹 ADMIN - REJECT SERVICE
+    public ServiceEntity rejectService(Long id) {
+        ServiceEntity service = serviceRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Service not found with id: " + id));
+
+        service.setStatus("REJECTED");
+        return serviceRepository.save(service);
+    }
+
     // 🔹 USER - GET ONLY APPROVED SERVICES
     public List<ServiceEntity> getApprovedServices() {
         return serviceRepository.findByStatus("APPROVED");
