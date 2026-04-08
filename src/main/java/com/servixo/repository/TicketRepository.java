@@ -7,7 +7,7 @@ import java.util.List;
 
 public interface TicketRepository extends JpaRepository<Ticket, Long> {
 
-    List<Ticket> findByUser_Id(Long userId); // ✅ BETTER
+	   List<Ticket> findByUser_Id(Long userId); // ✅ correct
 
     List<Ticket> findByStatus(String status);
 }
